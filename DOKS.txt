@@ -1,0 +1,58 @@
+1. Update + grundlegende Tools
+
+sudo apt update && sudo apt upgrade -y
+sudo apt install git python3 python3-venv python3-pip nginx -
+
+2. - docker
+sudo apt update
+sudo apt install -y ca-certificates curl gnupg
+
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io
+
+3. mongodb als docker container starten
+    - Philip Part
+
+
+4.Backend anwendung
+    cd backend
+    source venv/bin/activate
+    (pip install -r requirements.txt)
+    python app.py
+
+4.1 flask als systemd service
+    sudo systemctl start nginx
+    sudo systemctl enable nginx
+    systemctl status nginx
+
+    sudo nano /etc/systemd/system/flask.service
+
+    sudo systemctl daemon-reload
+sudo systemctl start flask
+sudo systemctl enable flask
+
+4.2 nginx reverse proxy
+sudo nano /etc/nginx/sites-available/backend
+Link aktivieren:
+
+sudo ln -s /etc/nginx/sites-available/backend /etc/nginx/sites-enabled/
+
+Default-Seite deaktivieren:
+
+sudo rm /etc/nginx/sites-enabled/default
+
+Check config:
+
+sudo nginx -t
+
+Neu starten:
+
+sudo systemctl restart nginx

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>T-Shirt Shop Backend</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>T-Shirt Shop Backend</h1>
+
+    <section>
+        <h2>Produkte</h2>
+        <button onclick="loadProducts()">Produkte laden</button>
+
+        <ul id="product-list"></ul>
+    </section>
+
+    <section>
+        <h2>Neues Produkt anlegen</h2>
+        <input id="name" placeholder="Name">
+        <input id="size" placeholder="Größe (S/M/L)">
+        <input id="price" placeholder="Preis">
+
+        <button onclick="addProduct()">Hinzufügen</button>
+    </section>
+
+    <script>
+        async function loadProducts() {
+            const res = await fetch('/api/products');
+            const data = await res.json();
+
+            const list = document.getElementById("product-list");
+            list.innerHTML = "";
+
+            data.forEach(p => {
+                const li = document.createElement("li");
+                li.textContent = `${p.name} (${p.size}) – ${p.price}€`;
+                list.appendChild(li);
+            });
+        }
+
+        async function addProduct() {
+            const body = {
+                name: document.getElementById("name").value,
+                size: document.getElementById("size").value,
+                price: document.getElementById("price").value
+            };
+
+            await fetch('/api/products', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+
+            loadProducts();
+        }
+    </script>
+</body>
+</html>
