@@ -8,19 +8,58 @@ sudo apt update
 sudo apt install -y ca-certificates curl gnupg
 
 sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+  sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
 echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  "deb [arch=$(dpkg --print-architecture) \
+  signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 sudo apt update
-sudo apt install -y docker-ce docker-ce-cli containerd.io
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+sudo systemctl enable docker
+sudo systemctl start docker
+
+# Optional: Benutzer in docker-Gruppe aufnehmen, damit docker ohne sudo funktioniert
+sudo usermod -aG docker $USER
+# danach neu einloggen oder:
+newgrp docker
 
 3. mongodb als docker container starten
-    - Philip Part
+-- Auf dem Server wurde im Home-Verzeichnis des Users der Ordner mongodb-docker angelegt:
+mkdir -p ~/mongodb-docker
+cd ~/mongodb-docker
 
+-- In diesem Ordner wurde die Datei docker-compose.yml mit folgendem Inhalt erstellt:
+version: '3.8'
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: dein-starkes-passwort
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+  mongodb_data:
+-- Anschließend wurde der MongoDB-Container im Hintergrund gestartet:
+docker compose up -d
+
+-- Der laufende Container wurde mit folgendem Befehl überprüft:
+docker ps
+
+-- Die Verbindung zur MongoDB-Datenbank im Container wurde über die Mongo Shell getestet:
+docker exec -it mongodb mongosh -u admin -p dein-starkes-passwort --authenticationDatabase admin
 
 4.Backend anwendung
     cd backend
