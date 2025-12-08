@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin – T-Shirt Shop</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script defer src="/static/api.js"></script>
+    <script defer src="/static/shop.js"></script>
+</head>
+<body>
+
+<header>
+    <h1>Admin Bereich</h1>
+    <nav>
+        <a href="/">Shop</a>
+    </nav>
+</header>
+
+<section class="container">
+
+    <h2 class="section-title">Produkte verwalten</h2>
+
+    <ul id="admin-product-list" class="admin-list"></ul>
+
+    <h3 class="section-title">Neues Produkt hinzufügen</h3>
+
+    <div class="admin-form">
+        <input id="name" placeholder="Name">
+        <input id="size" placeholder="Größe (S/M/L)">
+        <input id="price" placeholder="Preis (€)">
+        <button onclick="addProduct()">Hinzufügen</button>
+    </div>
+
+</section>
+
+<footer>
+    <p>© 2025 T-Shirt Shop Admin</p>
+</footer>
+
+<script>
+    document.addEventListener("DOMContentLoaded", loadAdminProducts);
+</script>
+
+</body>
+</html>

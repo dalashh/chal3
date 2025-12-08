@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Produktdetails</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script defer src="/static/api.js"></script>
+    <script defer src="/static/cart.js"></script>
+    <script defer src="/static/shop.js"></script>
+</head>
+<body>
+
+<header>
+    <h1>Produktdetails</h1>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/admin">Admin</a>
+        <a href="#" onclick="toggleCart()">🛒 (<span id="cart-count">0</span>)</a>
+    </nav>
+</header>
+
+<section class="container" style="max-width: 800px;">
+    <div id="product-detail" class="product-detail-card"></div>
+</section>
+
+<div id="cart-panel" class="cart hidden"></div>
+
+<footer>
+    <p>© 2025 T-Shirt Shop</p>
+</footer>
+
+</body>
+</html>

@@ -1,58 +1,45 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
-    <title>T-Shirt Shop Backend</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <meta charset="UTF-8">
+    <title>T-Shirt Shop</title>
+    <link rel="stylesheet" href="static/style.css">
+    <script defer src="/static/api.js"></script>
+    <script defer src="/static/cart.js"></script>
+    <script defer src="/static/shop.js"></script>
 </head>
 <body>
-    <h1>T-Shirt Shop Backend</h1>
 
-    <section>
-        <h2>Produkte</h2>
-        <button onclick="loadProducts()">Produkte laden</button>
+<header>
+    <h1>T-Shirt Shop</h1>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/admin">Admin</a>
+        <a href="#" onclick="toggleCart()">🛒 (<span id="cart-count">0</span>)</a>
+    </nav>
+</header>
 
-        <ul id="product-list"></ul>
-    </section>
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h2>Stylische Shirts, faire Preise.</h2>
+        <p>Entdecke einzigartige Designs und hochwertige Qualität.</p>
+        <a href="#products" class="hero-btn">Jetzt shoppen</a>
+    </div>
+</section>
 
-    <section>
-        <h2>Neues Produkt anlegen</h2>
-        <input id="name" placeholder="Name">
-        <input id="size" placeholder="Größe (S/M/L)">
-        <input id="price" placeholder="Preis">
+<!-- Produktliste -->
+<section id="products" class="container">
+    <h2 class="section-title">Unsere Produkte</h2>
+    <div id="product-list" class="grid"></div>
+</section>
 
-        <button onclick="addProduct()">Hinzufügen</button>
-    </section>
+<!-- Warenkorb Panel -->
+<div id="cart-panel" class="cart hidden"></div>
 
-    <script>
-        async function loadProducts() {
-            const res = await fetch('/api/products');
-            const data = await res.json();
+<footer>
+    <p>© 2025 T-Shirt Shop – Modern & Stylish</p>
+</footer>
 
-            const list = document.getElementById("product-list");
-            list.innerHTML = "";
-
-            data.forEach(p => {
-                const li = document.createElement("li");
-                li.textContent = `${p.name} (${p.size}) – ${p.price}€`;
-                list.appendChild(li);
-            });
-        }
-
-        async function addProduct() {
-            const body = {
-                name: document.getElementById("name").value,
-                size: document.getElementById("size").value,
-                price: document.getElementById("price").value
-            };
-
-            await fetch('/api/products', {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
-            });
-
-            loadProducts();
-        }
-    </script>
 </body>
 </html>
