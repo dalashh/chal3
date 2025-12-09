@@ -8,13 +8,13 @@ load_dotenv()
 # Connection String aus Umgebungsvariable
 MONGO_URI = os.getenv("MONGO_URI")
 if not MONGO_URI:
-    raise RuntimeError("MONGO_URI ist nicht gesetzt (fehlende .env?)")
+    raise RuntimeError("MONGO_URI ist nicht gesetzt (fehlende .env)")
 
-# MongoDB-Client erstellen (Singleton für das ganze Backend)
+# MongoDB-Client erstellen
 client = MongoClient(MONGO_URI)
 
 # Konkrete Datenbank auswählen (Name kannst du anpassen)
-db = client["it_merch_shop"]
+db = client["tshirt_shop"]
 
 def get_db():
     """Gibt die ausgewählte Datenbank zurück."""
