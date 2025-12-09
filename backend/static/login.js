@@ -1,112 +1,131 @@
-const signUpButton = document.getElementById('signUp');
-const signInButton = document.getElementById('signIn');
-const container = document.getElementById('container');
-
-signUpButton.addEventListener('click', () => {
-	container.classList.add("right-panel-active");
-});
-
-signInButton.addEventListener('click', () => {
-	container.classList.remove("right-panel-active");
-});
+// login.js - clean, working version
 
 document.addEventListener("DOMContentLoaded", () => {
-    const signInForm = document.querySelector(".sign-in-container form");
-    const signUpForm = document.querySelector(".sign-up-container form");
-    const signInButton = document.getElementById("signIn"); // Overlay button
-    const logButton = document.querySelector("#loginButton"); // Header/Login-Button
+  // ---------- Elements ----------
+  const signUpButton = document.getElementById("signUp");
+  const signInButton = document.getElementById("signIn");
+  const container = document.getElementById("container");
 
-    // Prüfen ob User eingeloggt (LocalStorage)
-    let currentUser = JSON.parse(localStorage.getItem("currentUser"));
-    if (currentUser) {
-        logButton.textContent = "Log out";
-    } else {
-        logButton.textContent = "Login";
-    }
+  const signInForm = document.querySelector(".sign-in-container form");
+  const signUpForm = document.querySelector(".sign-up-container form");
+  const logButton = document.querySelector("#loginButton"); // optional (header button)
 
-    // --- Log out Funktion ---
+  // ---------- UI Switch ----------
+  if (signUpButton && container) {
+    signUpButton.addEventListener("click", () => {
+      container.classList.add("right-panel-active");
+    });
+  }
+
+  if (signInButton && container) {
+    signInButton.addEventListener("click", () => {
+      container.classList.remove("right-panel-active");
+    });
+  }
+
+  // ---------- Login state ----------
+  let currentUser = JSON.parse(localStorage.getItem("currentUser")) || null;
+
+  if (logButton) {
+    logButton.textContent = currentUser ? "Log out" : "Login";
+  }
+
+  // ---------- Logout ----------
+  if (logButton) {
     logButton.addEventListener("click", () => {
-        if (currentUser) {
-            localStorage.removeItem("currentUser");
-            currentUser = null;
-            alert("You have been logged out.");
-            logButton.textContent = "Login";
-            window.location.href = "/login"; // optional: zurück zur Login-Seite
-        } else {
-            window.location.href = "/login";
-        }
-    });
+      if (currentUser) {
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("user_id");
+        localStorage.removeItem("username");
 
-    // --- Sign In ---
+        currentUser = null;
+        alert("You have been logged out.");
+        logButton.textContent = "Login";
+        window.location.href = "/login";
+      } else {
+        window.location.href = "/login";
+      }
+    });
+  }
+
+  // ---------- SIGN IN ----------
+  if (signInForm) {
     signInForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
+      e.preventDefault();
 
-        const email = signInForm.querySelector('input[type="email"]').value;
-        const password = signInForm.querySelector('input[type="password"]').value;
+      const email = signInForm.querySelector('input[type="email"]')?.value?.trim();
+      const password = signInForm.querySelector('input[type="password"]')?.value;
 
-        if (!email || !password) {
-            alert("Please fill in both email and password.");
-            return;
+      if (!email || !password) {
+        alert("Please fill in both email and password.");
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.user) {
+          const user = data.user;
+
+          localStorage.setItem("user_id", user._id || user.id || user.user_id);
+          localStorage.setItem("username", user.username || user.name || "");
+          localStorage.setItem("currentUser", JSON.stringify(user));
+
+          alert("Login successful! Welcome " + (user.username || ""));
+          window.location.href = "/";
+        } else {
+          alert(data.message || "Login failed. Check your credentials.");
         }
-
-        try {
-            const response = await fetch("/api/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password }),
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                alert("Login successful! Welcome " + data.user.first_name);
-                window.location.href = "/";
-            } else {
-                alert(data.message || "Login failed. Check your credentials.");
-            }
-        } catch (err) {
-            console.error("Error during login:", err);
-            alert("An error occurred. Please try again later.");
-        }
+      } catch (err) {
+        console.error("Login error:", err);
+        alert("An error occurred. Please try again later.");
+      }
     });
+  }
 
-    // --- Sign Up ---
+  // ---------- SIGN UP ----------
+  if (signUpForm) {
     signUpForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+      e.preventDefault();
 
-    const name = signUpForm.querySelector('input[placeholder="Name"]').value;
-    const email = signUpForm.querySelector('input[type="email"]').value;
-    const password = signUpForm.querySelector('input[type="password"]').value;
+      const name = signUpForm.querySelector('input[placeholder="Name"]')?.value?.trim();
+      const email = signUpForm.querySelector('input[type="email"]')?.value?.trim();
+      const password = signUpForm.querySelector('input[type="password"]')?.value;
 
-    if (!name || !email || !password) {
+      if (!name || !email || !password) {
         alert("Please fill in all fields.");
         return;
-    }
+      }
 
-    // Name aufteilen in first_name / last_name
-    const nameParts = name.trim().split(" ");
-    const first_name = nameParts[0];
-    const last_name = nameParts.slice(1).join(" ") || "";
+      const username = name;
 
-    try {
+      try {
         const response = await fetch("/api/users", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ first_name, last_name, email, password }),
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, email, password })
         });
 
         const data = await response.json();
 
         if (response.status === 201) {
-            alert("Registration successful! Please log in.");
-            document.getElementById("signIn").click(); // Overlay zurück zu Login
-        } else {
-            alert(data.message || "Registration failed. Try again.");
-        }
-    } catch (err) {
-        console.error("Error during registration:", err);
-        alert("An error occurred. Please try again later.");
-    }
-});
+          alert("Registration successful! Please log in.");
 
+          const overlaySignInBtn = document.getElementById("signIn");
+          if (overlaySignInBtn) overlaySignInBtn.click();
+        } else {
+          alert(data.message || data.error || "Registration failed. Try again.");
+        }
+      } catch (err) {
+        console.error("Registration error:", err);
+        alert("An error occurred. Please try again later.");
+      }
+    });
+  }
 });

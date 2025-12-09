@@ -19,7 +19,15 @@ def _serialize_product(p: dict) -> dict:
 
 def get_all_products() -> list[dict]:
     db = get_db()
-    items = list(db.products.find())
+    items = list(db.products.find({"active": True}).sort("name", 1))
+    return [_serialize_product(i) for i in items]
+
+def search_products(name: str) -> list[dict]:
+    db = get_db()
+    items = list(db.products.find({
+        "name": {"$regex": name, "$options": "i"},
+        "active": True
+    }).sort("name", 1))
     return [_serialize_product(i) for i in items]
 
 def get_product_by_id(product_id: str) -> dict | None:
@@ -40,7 +48,7 @@ def create_product(data: dict) -> dict:
         "base_price": float(data.get("base_price", 0)),
         "variants": data.get("variants", []),  # [{"size":"M","stock":10}]
         "active": data.get("active", True),
-        "created_at": datetime.utcnow(),
+        "created_at": datetime.now(),
         "color": data.get("color", "unbekannt"),
     }
 
