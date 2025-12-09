@@ -10,7 +10,7 @@ async function loadProducts() {
     list.innerHTML = data.map(p => `
         <div class="card">
             <h3>${p.name}</h3>
-            <p>Preis: ${p.price}€</p>
+            <p>Preis: ${p.base_price}€</p>
             <button onclick='addToCart(${JSON.stringify(p)})'>In den Warenkorb</button>
             <a class="link" href="/product?id=${p.id}">Details</a>
         </div>
@@ -28,7 +28,7 @@ async function loadProductDetail() {
     detail.innerHTML = `
         <h2>${p.name}</h2>
         <p>Größe: ${p.size}</p>
-        <p>Preis: ${p.price}€</p>
+        <p>Preis: ${p.base_price}€</p>
         <button onclick='addToCart(${JSON.stringify(p)})'>In den Warenkorb</button>
     `;
 }
@@ -55,7 +55,7 @@ async function addProduct() {
     const body = {
         name: document.getElementById("name").value,
         size: document.getElementById("size").value,
-        price: parseFloat(document.getElementById("price").value)
+        price: parseFloat(document.getElementById("base_price").value)
     };
 
     await apiAddProduct(body);

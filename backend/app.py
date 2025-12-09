@@ -24,7 +24,7 @@ def api_users():
 
 @app.post("/api/users")
 def api_create_user():
-    return jsonify(create_user(request.json)), 201
+    return jsonify(create_user(request.json, request.remote_addr)), 201
 
 
 @app.post("/api/cart/<user_id>")
