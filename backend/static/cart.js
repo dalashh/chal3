@@ -146,7 +146,7 @@ async function addToCart(product) {
 
   if (isLoggedIn()) {
     // nur die Änderung (=1) ans Backend schicken
-    await syncItemToBackend(product.product_id, product.qty || 1, product.size || "M");
+    await syncItemToBackend(product.product_id, 1, product.size || "M");
     // danach echten Stand vom Server holen
     await loadCart();
   } else {
@@ -154,28 +154,23 @@ async function addToCart(product) {
   }
 }
 
-async function changeQty(productId, delta) {
+async function changeQty(productId, size, delta) {
   loadLocalCart();
-
-  const item = cart.find(p => p.product_id === productId);
+  const item = cart.find(p => p.product_id === productId && (p.size || "M") === (size || "M"));
   if (!item) return;
-
   item.qty += delta;
-if (item.qty <= 0) {
-  // lokal entfernen
-  cart = cart.filter(p => p.product_id !== productId);
-}
-
+  if (item.qty <= 0) {
+    cart = cart.filter(p => !(p.product_id === productId && (p.size || "M") === (size || "M")));
+  }
   saveLocalCart();
-
   if (isLoggedIn()) {
-  // nur die Änderung ±1 ans Backend schicken
-  await syncItemToBackend(item.product_id, delta, item.size);
-}
-
+    await syncItemToBackend(item.product_id, delta, item.size || "M");
+  }
   renderCart();
   updateCartCount();
 }
+
+
 
 // ---------- Load Cart for rendering (guest/local OR logged-in/backend) ----------
 async function loadCart() {
@@ -197,12 +192,9 @@ async function loadCart() {
       qty: i.qty,
       size: i.size || "M",
       name: i.name || (i.product?.name ?? "Produkt"),
-      price:
-        i.price ??
-        i.base_price ??
-        (i.product?.price ?? 0),
+      price: i.price ?? i.base_price ?? (i.product?.price ?? 0),
       subtotal: i.subtotal || null
-    }));
+      }));
 
     saveLocalCart();      // lokaler Mirror vom Server
     updateCartCount();
@@ -274,13 +266,13 @@ function renderCart(total = null) {
 
     const minus = document.createElement("button");
     minus.textContent = "–";
-   minus.onclick = () => changeQty(item.product_id, -1);
+    minus.onclick = () => changeQty(item.product_id, item.size || "M", -1);
     const qtySpan = document.createElement("span");
     qtySpan.textContent = String(item.qty);
 
     const plus = document.createElement("button");
     plus.textContent = "+";
-    plus.onclick  = () => changeQty(item.product_id, 1);
+    plus.onclick  = () => changeQty(item.product_id, item.size || "M", +1);
 
     controls.appendChild(minus);
     controls.appendChild(qtySpan);
@@ -335,3 +327,34 @@ window.addToCart = addToCart;
 window.toggleCart = toggleCart;
 window.changeQty = changeQty;
 window.checkout = checkout;
+
+
+// Größe auswählen
+document.addEventListener("click", (e) => {
+    if (!e.target.classList.contains("size-btn")) return;
+    if (e.target.hasAttribute("disabled")) return;
+
+    const parent = e.target.closest(".size-options");
+    parent.querySelectorAll(".size-btn").forEach(btn => btn.classList.remove("active"));
+    e.target.classList.add("active");
+});
+
+// Add-to-cart mit gewählter Größe
+function addSelectedSizeToCart(button) {
+    const wrapper = button.previousElementSibling.querySelector(".size-options");
+
+    const size = wrapper.querySelector(".size-btn.active")?.dataset.size;
+    if (!size) return alert("Bitte eine Größe auswählen.");
+
+    const productId = wrapper.dataset.productId;
+    const productName = wrapper.dataset.productName;
+    const productPrice = Number(wrapper.dataset.productPrice);
+
+    addToCart({
+        product_id: productId,
+        qty: 1,
+        size: size,
+        name: productName,
+        price: productPrice
+    });
+}
