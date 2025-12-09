@@ -36,7 +36,7 @@ def create_user(data: dict, ip: str = "0.0.0.0") -> dict:
         "change_history": [
             {
                 "action": "created",
-                "timestamp": datetime.utcnow(),
+                "timestamp": datetime.now(),
                 "ip": ip
             }
         ],
@@ -78,3 +78,17 @@ def add_shipping_address(user_id: str, address: dict, ip="0.0.0.0"):
             }}
         }
     )
+
+
+# ---------- AUTHENTICATION ----------
+def verify_login(email: str, password: str):
+    db = get_db()
+
+    user = db.users.find_one({"email": email})
+    if not user:
+        return None
+
+    if not bcrypt.checkpw(password.encode(), user["password_hash"].encode()):
+        return None
+
+    return _serialize_user(user)

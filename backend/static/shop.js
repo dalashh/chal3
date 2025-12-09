@@ -11,7 +11,13 @@ async function loadProducts() {
         <div class="card">
             <h3>${p.name}</h3>
             <p>Preis: ${p.base_price}€</p>
-            <button onclick='addToCart(${JSON.stringify(p)})'>In den Warenkorb</button>
+           <button onclick='addToCart({
+            product_id: "${p.id}",
+            name: "${p.name}",
+            price: ${p.base_price},
+            size: "${p.size}"
+                })'>In den Warenkorb</button>
+
             <a class="link" href="/product?id=${p.id}">Details</a>
         </div>
     `).join("");
@@ -29,7 +35,13 @@ async function loadProductDetail() {
         <h2>${p.name}</h2>
         <p>Größe: ${p.size}</p>
         <p>Preis: ${p.base_price}€</p>
-        <button onclick='addToCart(${JSON.stringify(p)})'>In den Warenkorb</button>
+        <button onclick='addToCart({
+    product_id: "${p.id}",
+    name: "${p.name}",
+    price: ${p.base_price},
+    size: "${p.size}"
+    })'>In den Warenkorb</button>
+
     `;
 }
 
@@ -40,7 +52,7 @@ async function loadAdminProducts() {
 
     list.innerHTML = data.map(p => `
         <li>
-            ${p.name} (${p.size}) – ${p.price}€
+            ${p.name} (${p.size}) – ${p.base_price}€
             <button onclick="deleteProduct('${p.id}')">Löschen</button>
         </li>
     `).join("");

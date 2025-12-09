@@ -15,7 +15,9 @@
     <nav>
         <a href="/">Home</a>
         <a href="/admin">Admin</a>
+        <a href="/login">Login</a>
         <a href="#" onclick="toggleCart()">🛒 (<span id="cart-count">0</span>)</a>
+        
     </nav>
 </header>
 
@@ -35,7 +37,13 @@
 </section>
 
 <!-- Warenkorb Panel -->
-<div id="cart-panel" class="cart hidden"></div>
+<div id="cart-panel" class="cart hidden">
+    <h3>Warenkorb</h3>
+    <div id="cart-items"></div>
+    <div id="cart-total"></div>
+    <button id="checkout-btn">Zur Kasse</button>
+</div>
+
 
 <footer>
     <p>© 2025 T-Shirt Shop – Modern & Stylish</p>
