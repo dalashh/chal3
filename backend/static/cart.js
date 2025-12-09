@@ -145,19 +145,14 @@ async function addToCart(product) {
   addToLocalCartObj(product);
 
   if (isLoggedIn()) {
-    const idx = findLocalItemIndex(product.product_id, product.size);
-    const qty = cart[idx].qty;
-
-    await syncItemToBackend(product.product_id, qty, product.size || "M");
-
-    // ❌ NICHT loadCart() aufrufen!
-    renderCart();      
-    updateCartCount();
+    // nur die Änderung (=1) ans Backend schicken
+    await syncItemToBackend(product.product_id, product.qty || 1, product.size || "M");
+    // danach echten Stand vom Server holen
+    await loadCart();
   } else {
     renderCart();
   }
 }
-
 
 async function changeQty(productId, delta) {
   loadLocalCart();
@@ -166,68 +161,61 @@ async function changeQty(productId, delta) {
   if (!item) return;
 
   item.qty += delta;
-  if (item.qty < 1) item.qty = 1;
+if (item.qty <= 0) {
+  // lokal entfernen
+  cart = cart.filter(p => p.product_id !== productId);
+}
 
   saveLocalCart();
 
   if (isLoggedIn()) {
-    await syncItemToBackend(item.product_id, item.qty, item.size);
-  }
+  // nur die Änderung ±1 ans Backend schicken
+  await syncItemToBackend(item.product_id, delta, item.size);
+}
 
   renderCart();
   updateCartCount();
 }
 
-
-
 // ---------- Load Cart for rendering (guest/local OR logged-in/backend) ----------
 async function loadCart() {
-  loadLocalCart();
-  updateCartCount();
-
   if (!isLoggedIn()) {
-    // Guest: render local cart
+    // Guest: nur lokalen Cart verwenden
+    loadLocalCart();
+    updateCartCount();
     renderCart();
     return;
   }
 
-  // Logged in: before showing, if local cart still has items (user just logged in),
-  // merge local -> backend then fetch authoritative cart
-
-
-  // Fetch cart from backend (with price calculation)
+  // Eingeloggt: immer NUR den Server-Stand holen
   try {
     const url = `${API_BASE}/api/cart/${userId}`;
     const data = await getJson(url);
 
-    // Map server items to local representation for UI (also save locally if desired)
     cart = (data.items || []).map(i => ({
-  product_id: i.product_id,
-  qty: i.qty,
-  size: i.size || "M",
+      product_id: i.product_id,
+      qty: i.qty,
+      size: i.size || "M",
+      name: i.name || (i.product?.name ?? "Produkt"),
+      price:
+        i.price ??
+        i.base_price ??
+        (i.product?.price ?? 0),
+      subtotal: i.subtotal || null
+    }));
 
-  // NAME finden
-  name: i.name || (i.product?.name ?? "Produkt"),
-
-  // PREIS finden
-  price: 
-    i.price ??
-    i.base_price ??
-    (i.product?.price ?? 0),
-
-  subtotal: i.subtotal || null
-}));
-
-
-    saveLocalCart(); // optional: keep local mirror of server cart
+    saveLocalCart();      // lokaler Mirror vom Server
     updateCartCount();
     renderCart(data.total);
   } catch (e) {
     console.error("Failed to load cart from backend:", e);
-    // Fall back to local rendering
+    // Notfall: letzter lokaler Stand
+    loadLocalCart();
+    updateCartCount();
     renderCart();
   }
 }
+
 
 // ---------- Checkout ----------
 async function checkout() {
@@ -319,9 +307,13 @@ function renderCart(total = null) {
 function toggleCart() {
   const panel = document.getElementById("cart-panel");
   if (!panel) return;
-  panel.classList.toggle("hidden");
-  // refresh cart view
-  loadCart();
+
+  const nowHidden = panel.classList.toggle("hidden");
+
+  // Nur wenn sichtbar geworden, aktuellen Stand nachladen
+  if (!nowHidden) {
+    loadCart();
+  }
 }
 
 // ---------- Initialization ----------
