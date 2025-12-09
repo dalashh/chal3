@@ -25,6 +25,22 @@ def api_create_product():
     return jsonify(create_product(request.json)), 201
 
 
+@app.delete("/api/products/{product_id}")
+def api_delete_product(product_id: str):
+    success = delete_product(product_id)
+    if success:
+        return jsonify({"success": True}), 200
+    return jsonify({"error": "Produkt nicht gefunden"}), 404
+
+@app.put("/api/products/{product_id}")
+def api_update_product(product_id: str):
+    product = update_product(product_id, request.json)
+    if product:
+        return jsonify(product), 200
+    return jsonify({"error": "Produkt nicht gefunden"}), 404
+
+
+
 # ========================
 # USERS
 # ========================

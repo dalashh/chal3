@@ -11,7 +11,6 @@ const COOKIE_CONSENT_KEY = "cookie-consent";
     acceptBtn.addEventListener("click", () => {
       localStorage.setItem(COOKIE_CONSENT_KEY, "accepted");
       banner.classList.add("hidden");
-      // Hier könnt ihr z.B. Tracking/Analytics initialisieren
     });
 
     declineBtn.addEventListener("click", () => {
@@ -27,6 +26,5 @@ const COOKIE_CONSENT_KEY = "cookie-consent";
       // User war noch nie hier -> Banner anzeigen
       showCookieBanner();
     } else if (consent === "accepted") {
-      // Hier könnt ihr direkt optionale Cookies/Tracker laden
     }
   });

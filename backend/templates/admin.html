@@ -8,7 +8,6 @@
     <script defer src="/static/shop.js"></script>
 </head>
 <body>
-
 <header>
     <h1>Admin Bereich</h1>
     <nav>
@@ -17,29 +16,92 @@
 </header>
 
 <section class="container">
-
     <h2 class="section-title">Produkte verwalten</h2>
-
     <ul id="admin-product-list" class="admin-list"></ul>
 
     <h3 class="section-title">Neues Produkt hinzufügen</h3>
-
     <div class="admin-form">
         <input id="name" placeholder="Name">
-        <input id="size" placeholder="Größe (S/M/L)">
+        <input id="description" placeholder="Beschreibung">
         <input id="price" placeholder="Preis (€)">
+        <input id="image" placeholder="Bild URL">
+        <input id="stock" placeholder="Lagerbestand">
+        <input id="sizes" placeholder="Größen (kommagetrennt)">
         <button onclick="addProduct()">Hinzufügen</button>
     </div>
-
 </section>
 
-<footer>
+<footer class="footer">
     <p>© 2025 T-Shirt Shop Admin</p>
 </footer>
 
 <script>
-    document.addEventListener("DOMContentLoaded", loadAdminProducts);
+async function apiGetProducts() {
+    const response = await fetch('/api/products');
+    if (!response.ok) throw new Error('API Fehler');
+    return await response.json();
+}
+
+async function apiDeleteProduct(id) {
+    const response = await fetch(`/api/products/${id}`, {
+        method: 'DELETE'
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Löschen fehlgeschlagen');
+    }
+    return await response.json();
+}
+
+async function loadAdminProducts() {
+    console.log('Lade Produkte...');
+    try {
+        const products = await apiGetProducts();
+        console.log('Produkte:', products);
+        
+        const list = document.getElementById("admin-product-list");
+        if (!products || products.length === 0) {
+            list.innerHTML = '<li>Keine Produkte gefunden</li>';
+            return;
+        }
+        
+        list.innerHTML = products.map(p => {
+            const id = p._id?.$oid || p._id || p.id; // Sichere ID-Extraktion
+            return `
+                <li>
+                    <div class="product-info">
+                        <h4>${p.name}</h4>
+                        <p>Preis: ${p.base_price}€ | ${p.color || ''}</p>
+                        <p>Größen: ${p.variants?.map(v => v.size).join(', ') || '–'}</p>
+                    </div>
+                    <div class="admin-actions">
+                        <button class="edit-btn" onclick="alert('Edit ${p.name}')">✏️</button>
+                        <button class="delete-btn" onclick="deleteProduct('${id}')">🗑️</button>
+                    </div>
+                </li>
+            `;
+        }).join("");
+    } catch (error) {
+        console.error('Fehler:', error);
+        document.getElementById("admin-product-list").innerHTML = 
+            '<li style="color:red;">Fehler: ' + error.message + '</li>';
+    }
+}
+
+async function deleteProduct(id) {
+    if (!confirm('Produkt wirklich löschen?')) return;
+    
+    try {
+        await apiDeleteProduct(id);
+        loadAdminProducts(); // Neu laden
+    } catch (error) {
+        alert('Fehler beim Löschen: ' + error.message);
+    }
+}
+
+loadAdminProducts();
 </script>
+
 
 </body>
 </html>
