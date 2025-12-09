@@ -10,7 +10,6 @@ async function loadProducts() {
     list.innerHTML = data.map(p => `
         <div class="card">
             <h3>${p.name}</h3>
-            <p>Größe: ${p.size}</p>
             <p>Preis: ${p.price}€</p>
             <button onclick='addToCart(${JSON.stringify(p)})'>In den Warenkorb</button>
             <a class="link" href="/product?id=${p.id}">Details</a>
