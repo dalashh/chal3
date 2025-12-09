@@ -104,6 +104,13 @@ nav a:hover {
     text-decoration: underline;
 }
 
+.card img.product-image {
+  width: 100%;
+  border-radius: 12px;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+
 /* =========================
    BUTTONS
 ========================= */

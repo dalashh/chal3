@@ -136,50 +136,49 @@ function addToLocalCartObj(item) {
 
 // public function for UI to call
 async function addToCart(product) {
-    if (!product.product_id) {
-  console.error("Missing product_id in addToCart()", product);
-  alert("Produkt-ID fehlt – bitte Entwickler informieren.");
-  return;
-    }
-  // product can be { product_id, size, qty=1, name?, price? }
+  if (!product.product_id) {
+    console.error("Missing product_id in addToCart()", product);
+    alert("Produkt-ID fehlt!");
+    return;
+  }
+
   addToLocalCartObj(product);
 
   if (isLoggedIn()) {
-    // sync new qty to backend (backend hält qty, nicht client)
     const idx = findLocalItemIndex(product.product_id, product.size);
-    const qty = cart[idx] ? cart[idx].qty : product.qty || 1;
+    const qty = cart[idx].qty;
+
     await syncItemToBackend(product.product_id, qty, product.size || "M");
-    // reload display from backend to get prices/totals authoritative
-    await loadCart();
+
+    // ❌ NICHT loadCart() aufrufen!
+    renderCart();      
+    updateCartCount();
   } else {
-    // guest: update UI from local
     renderCart();
   }
 }
 
-// Change quantity (from UI)
-async function changeQuantity(product_id, size, delta) {
-  const idx = findLocalItemIndex(product_id, size);
-  if (idx < 0) return;
-  const newQty = (cart[idx].qty || 0) + delta;
-  if (newQty <= 0) {
-    // remove
-    cart.splice(idx, 1);
-  } else {
-    cart[idx].qty = newQty;
-  }
+
+async function changeQty(productId, delta) {
+  loadLocalCart();
+
+  const item = cart.find(p => p.product_id === productId);
+  if (!item) return;
+
+  item.qty += delta;
+  if (item.qty < 1) item.qty = 1;
+
   saveLocalCart();
-  updateCartCount();
 
   if (isLoggedIn()) {
-    // push change to backend (if item removed -> qty 0)
-    const qtyForServer = newQty <= 0 ? 0 : newQty;
-    await syncItemToBackend(product_id, qtyForServer, size);
-    await loadCart(); // refresh authoritative data
-  } else {
-    renderCart();
+    await syncItemToBackend(item.product_id, item.qty, item.size);
   }
+
+  renderCart();
+  updateCartCount();
 }
+
+
 
 // ---------- Load Cart for rendering (guest/local OR logged-in/backend) ----------
 async function loadCart() {
@@ -194,13 +193,7 @@ async function loadCart() {
 
   // Logged in: before showing, if local cart still has items (user just logged in),
   // merge local -> backend then fetch authoritative cart
-  if (cart.length > 0) {
-    try {
-      await mergeLocalCartToBackend();
-    } catch (e) {
-      console.error("mergeLocalCartToBackend failed", e);
-    }
-  }
+
 
   // Fetch cart from backend (with price calculation)
   try {
@@ -209,13 +202,22 @@ async function loadCart() {
 
     // Map server items to local representation for UI (also save locally if desired)
     cart = (data.items || []).map(i => ({
-      product_id: i.product_id,
-      qty: i.qty,
-      size: i.size || "M",
-      name: i.name || null,
-      price: i.base_price || null,
-      subtotal: i.subtotal || null
-    }));
+  product_id: i.product_id,
+  qty: i.qty,
+  size: i.size || "M",
+
+  // NAME finden
+  name: i.name || (i.product?.name ?? "Produkt"),
+
+  // PREIS finden
+  price: 
+    i.price ??
+    i.base_price ??
+    (i.product?.price ?? 0),
+
+  subtotal: i.subtotal || null
+}));
+
 
     saveLocalCart(); // optional: keep local mirror of server cart
     updateCartCount();
@@ -284,14 +286,13 @@ function renderCart(total = null) {
 
     const minus = document.createElement("button");
     minus.textContent = "–";
-    minus.onclick = () => changeQuantity(item.product_id, item.size, -1);
-
+   minus.onclick = () => changeQty(item.product_id, -1);
     const qtySpan = document.createElement("span");
     qtySpan.textContent = String(item.qty);
 
     const plus = document.createElement("button");
     plus.textContent = "+";
-    plus.onclick = () => changeQuantity(item.product_id, item.size, 1);
+    plus.onclick  = () => changeQty(item.product_id, 1);
 
     controls.appendChild(minus);
     controls.appendChild(qtySpan);
@@ -340,5 +341,5 @@ document.addEventListener("DOMContentLoaded", () => {
 // Expose functions for inline onclick usage if needed
 window.addToCart = addToCart;
 window.toggleCart = toggleCart;
-window.changeQuantity = changeQuantity;
+window.changeQty = changeQty;
 window.checkout = checkout;

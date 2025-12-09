@@ -35,8 +35,11 @@ def api_users():
 
 @app.post("/api/users")
 def api_create_user():
-    user = create_user(request.json, request.remote_addr)
-    # wichtig: plaintext password NIE zurückgeben
+    try:
+        user = create_user(request.json, request.remote_addr)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
     if "password" in user:
         del user["password"]
     return jsonify(user), 201

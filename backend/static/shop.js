@@ -4,24 +4,24 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function loadProducts() {
-    const list = document.getElementById("product-list");
-    const data = await apiGetProducts();
+  const list = document.getElementById("product-list");
+  const data = await apiGetProducts();
 
-    list.innerHTML = data.map(p => `
-        <div class="card">
-            <h3>${p.name}</h3>
-            <p>Preis: ${p.base_price}€</p>
-           <button onclick='addToCart({
-            product_id: "${p.id}",
-            name: "${p.name}",
-            price: ${p.base_price},
-            size: "${p.size}"
-                })'>In den Warenkorb</button>
-
-            <a class="link" href="/product?id=${p.id}">Details</a>
-        </div>
-    `).join("");
+  list.innerHTML = data
+    .map(p => `
+      <div class="card">
+        ${p.image ? `<img class="product-image" src="${p.image}" alt="${p.name}">` : ""}
+        <h3>${p.name}</h3>
+        <p>${p.description || ""}</p>
+        <p>Preis: ${p.base_price} €</p>
+        <button onclick="addToCart({ product_id: '${p.id}', qty: 1 })">
+          In den Warenkorb
+        </button>
+      </div>
+    `)
+    .join("");
 }
+
 
 async function loadProductDetail() {
     const params = new URLSearchParams(window.location.search);
@@ -35,12 +35,13 @@ async function loadProductDetail() {
         <h2>${p.name}</h2>
         <p>Größe: ${p.size}</p>
         <p>Preis: ${p.base_price}€</p>
-        <button onclick='addToCart({
-    product_id: "${p.id}",
-    name: "${p.name}",
-    price: ${p.base_price},
-    size: "${p.size}"
-    })'>In den Warenkorb</button>
+       <button onclick='addToCart({
+  product_id: "${p.id}",
+  name: "${p.name}",
+  price: ${p.base_price},
+  size: "${p.size || "Standard"}"
+})'>In den Warenkorb</button>
+
 
     `;
 }

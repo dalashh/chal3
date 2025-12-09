@@ -13,6 +13,7 @@ def _serialize_product(p: dict) -> dict:
         "active": p.get("active", True),
         "created_at": p.get("created_at"),
         "color": p.get("color"),
+        "image": p.get("image"),
     }
 
 # ---------- READ ----------
@@ -50,6 +51,7 @@ def create_product(data: dict) -> dict:
         "active": data.get("active", True),
         "created_at": datetime.now(),
         "color": data.get("color", "unbekannt"),
+        "image": data.get("image"),
     }
 
     result = db.products.insert_one(new_product)
@@ -69,7 +71,8 @@ def update_product(product_id: str, data: dict) -> dict | None:
         "base_price",
         "variants",
         "active",
-        "color"
+        "color",
+        "image"
     ]:
         if field in data:
             update_fields[field] = data[field]

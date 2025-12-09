@@ -20,6 +20,16 @@ def _serialize_user(u: dict) -> dict:
 def create_user(data: dict, ip: str = "0.0.0.0") -> dict:
     db = get_db()
 
+    email = data.get("email")
+    if not email:
+        raise ValueError("Email is required")
+
+    # NEU: prüfen, ob es die Email schon gibt
+    existing = db.users.find_one({"email": email})
+    if existing:
+        # klare Fehlermeldung fürs Frontend
+        raise ValueError("Email already in use")
+
     password = data.get("password", "")
     password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
